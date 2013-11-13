@@ -14,19 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package backtojee.services
-
-import com.google.inject.AbstractModule
+package core.service
 
 /**
- * This class loads all dependency injections
+ * This is the contract for any authentication service
  */
-class AuthenticationModule extends AbstractModule {
+interface AuthenticationService {
 
-    void configure() {
-
-        bind(AuthenticationService).to(DummyAuthenticationService)
-
-    }
+    boolean checkCredentials(String username, String password)
 
 }

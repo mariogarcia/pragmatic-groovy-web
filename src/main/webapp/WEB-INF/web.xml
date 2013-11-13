@@ -3,25 +3,22 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-    <servlet>
-        <servlet-name>hello</servlet-name>
-        <servlet-class>backtojee.servlet.HelloWorldServlet</servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>hello</servlet-name>
-        <url-pattern>/hello</url-pattern>
-    </servlet-mapping>
+    <listener>
+        <listener-class>core.conf.AppGuiceServletConfig</listener-class>
+    </listener>
 
     <filter>
-        <filter-name>authentication</filter-name>
-        <filter-class>backtojee.filter.BasicAuthenticationFilter</filter-class>
+        <filter-name>guiceFilter</filter-name>
+        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
     </filter>
 
     <filter-mapping>
-        <filter-name>authentication</filter-name>
-        <url-pattern>*</url-pattern>
+        <filter-name>guiceFilter</filter-name>
+        <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
     </filter-mapping>
 
 </web-app>

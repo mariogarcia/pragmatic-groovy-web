@@ -14,36 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-[package backtojee.filter
+package core.servlet
 
-import com.google.inject.Guice
-import com.google.inject.Injector
+import java.io.IOException
 
-import javax.servlet.Filter
-import javax.servlet.FilterConfig
-import javax.servlet.FilterChain
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
-import backtojee.services.AuthenticationModule
-import backtojee.services.AuthenticationService
-
+import com.google.inject.Singleton
 /**
- * This is the base for any authentication filter
+ * Simple HttpServlet that says "Hello"
  */
-class DefaultFilter implements Filter {
+ @Singleton
+class HelloWorldServlet extends HttpServlet {
 
-    def authenticationService
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
 
-    void init(FilterConfig config) {
-
-        Injector injector = Guice.createInjector(new AuthenticationModule())
-
-        authenticationService = injector.getInstance(AuthenticationService)
+        response.writer.write("Heeloooooo!!!")
 
     }
-
-    void destroy() { }
-    void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) { }
 
 }

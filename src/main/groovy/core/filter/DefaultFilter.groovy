@@ -14,18 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package backtojee.services
+package core.filter
+
+import javax.servlet.Filter
+import javax.servlet.FilterConfig
+import javax.servlet.FilterChain
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
 
 /**
- * Default implementation of an AuthenticationService
+ * This is the base for any authentication filter
  */
-class DummyAuthenticationService implements AuthenticationService {
+abstract class DefaultFilter implements Filter {
 
-    boolean checkCredentials(String username, String password) {
-
-        return username == 'john' && password == 'myPassword'
-
-    }
-
+    void init(FilterConfig config) { }
+    void destroy() { }
+    void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) { }
 
 }
