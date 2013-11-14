@@ -14,26 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-apply plugin: 'war'
-apply plugin: 'jetty'
-apply plugin: 'groovy'
+package resterson.auth
 
-repositories {
+/**
+ * Default implementation of an AuthenticationService
+ */
+class DummyAuthenticationService implements AuthenticationService {
 
-    mavenCentral()
+    boolean checkCredentials(String username, String password) {
 
-}
+        return username == 'john' && password == 'myPassword'
 
-dependencies {
+    }
 
-    compile 'org.codehaus.groovy:groovy:2.1.7'
-    compile 'com.google.inject:guice:3.0'
-    compile 'com.google.inject.extensions:guice-servlet:3.0'
-
-    providedCompile 'javax.servlet:servlet-api:2.5'
-    runtime 'javax.servlet:jstl:1.1.2'
-
-    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-    testCompile 'junit:junit:4.11'
 
 }

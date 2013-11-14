@@ -14,26 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core.servlet
+package resterson.auth
 
-import java.io.IOException
-
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-
-import com.google.inject.Singleton
 /**
- * Simple HttpServlet that says "Hello"
+ * This is the contract for any authentication service
  */
- @Singleton
-class HelloWorldServlet extends HttpServlet {
+interface AuthenticationService {
 
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-
-        response.writer.write("Heeloooooo!!!")
-
-    }
+    boolean checkCredentials(String username, String password)
 
 }

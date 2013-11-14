@@ -14,18 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core.filter
+package resterson.auth
 
 import groovy.util.logging.Log
 
 import javax.servlet.FilterChain
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
-
-import core.service.AuthenticationService
-
-import com.google.inject.Inject
-import com.google.inject.Singleton
 
 /**
  * This filter checks whether the path should be protected and ask for
@@ -37,10 +32,8 @@ import com.google.inject.Singleton
  * @author marioggar
  */
 @Log
-@Singleton
 class BasicAuthenticationFilter extends DefaultFilter {
 
-    @Inject
     AuthenticationService authenticationService
 
     void doFilter(

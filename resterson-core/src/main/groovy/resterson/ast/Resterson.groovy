@@ -14,21 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core.filter
+package resterson.ast
 
-import javax.servlet.Filter
-import javax.servlet.FilterConfig
-import javax.servlet.FilterChain
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
+import java.lang.annotation.Target
+import java.lang.annotation.Retention
+import java.lang.annotation.ElementType
+import java.lang.annotation.RetentionPolicy
 
 /**
- * This is the base for any authentication filter
+ * Every class annotated with this type will be transform
+ * into a servlet
+ *
+ * @author Mario Garcia
  */
-abstract class DefaultFilter implements Filter {
-
-    void init(FilterConfig config) { }
-    void destroy() { }
-    void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) { }
-
-}
+@Target([ElementType.TYPE])
+@Retention(RetentionPolicy.SOURCE)
+@interface Resterson { }

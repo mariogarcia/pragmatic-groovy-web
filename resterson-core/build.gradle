@@ -14,18 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core.service
+apply plugin: 'groovy'
 
-/**
- * Default implementation of an AuthenticationService
- */
-class DummyAuthenticationService implements AuthenticationService {
+repositories { mavenCentral() }
 
-    boolean checkCredentials(String username, String password) {
+dependencies {
 
-        return username == 'john' && password == 'myPassword'
+    compile 'org.codehaus.groovy:groovy:2.1.7'
+    compile 'javax.servlet:javax.servlet-api:3.0.1'
 
-    }
-
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+    testCompile 'junit:junit:4.11'
 
 }

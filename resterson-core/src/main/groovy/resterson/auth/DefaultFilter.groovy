@@ -14,13 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core.service
+package resterson.auth
+
+import javax.servlet.Filter
+import javax.servlet.FilterConfig
+import javax.servlet.FilterChain
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
 
 /**
- * This is the contract for any authentication service
+ * This is the base for any authentication filter
  */
-interface AuthenticationService {
+abstract class DefaultFilter implements Filter {
 
-    boolean checkCredentials(String username, String password)
+    void init(FilterConfig config) { }
+    void destroy() { }
+    void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) { }
 
 }
