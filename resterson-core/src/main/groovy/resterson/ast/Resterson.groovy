@@ -21,6 +21,8 @@ import java.lang.annotation.Retention
 import java.lang.annotation.ElementType
 import java.lang.annotation.RetentionPolicy
 
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
+
 /**
  * Every class annotated with this type will be transform
  * into a servlet
@@ -29,4 +31,6 @@ import java.lang.annotation.RetentionPolicy
  */
 @Target([ElementType.TYPE])
 @Retention(RetentionPolicy.SOURCE)
+@GroovyASTTransformationClass(['resterson.ast.RestersonAst'])
 @interface Resterson { }
+

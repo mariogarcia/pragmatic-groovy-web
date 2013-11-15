@@ -34,12 +34,6 @@ import org.codehaus.groovy.transform.ASTTransformation
  */
 abstract class TypeAnnotatedAst implements ASTTransformation {
 
-    class TypeAnnotatedStep {
-        ClassNode classNode
-        AnnotationNode annotationNode
-        SourceUnit sourceUnit
-    }
-
     final Class annotationClazz
 
     TypeAnnotatedAst(Class annotationClazz) {
@@ -47,23 +41,29 @@ abstract class TypeAnnotatedAst implements ASTTransformation {
     }
 
     void visit(final ASTNode[] nodes, final SourceUnit sourceUnit) {
-        checkNodes(nodes)
-        visitClassNode(
-            new TypeAnnotatedStep(
-                classNode: nodes.first(),
-                annotationNode: nodes.last(),
-                sourceUnit: sourceUnit
-            )
+
+        if (!checkNodes(nodes)) return
+
+        def info = new TypeAnnotatedAstStep(
+            sourceUnit: sourceUnit,
+            classNode: nodes[1],
+            annotationNode: nodes[0]
         )
+
+        visitClassNode(info)
+
     }
 
     def checkNodes(ASTNode[] nodes) {
-        nodes[0] && nodes[1] &&
-        nodes[1].isInstance(ClassNode) &&
-        nodes[0].classNode.declatedClass.isInstance(annotationClazz)
+
+        nodes[0] &&
+        nodes[1] &&
+        nodes[1].class.isAssignableFrom(ClassNode) &&
+        nodes[0].classNode.typeClass.name == this.annotationClazz.name
+
     }
 
-    abstract void visitClassNode(TypeAnnotatedStep info)
+    abstract void visitClassNode(TypeAnnotatedAstStep info)
 
 }
 

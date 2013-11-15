@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.builder.AstBuilder
 
 import org.codehaus.groovy.control.CompilePhase
@@ -42,15 +43,14 @@ class RestersonAst extends TypeAnnotatedAst {
         super(Resterson)
     }
 
-    void visitClassNode(final TypeAnnotatedStep info){
+    void visitClassNode(final TypeAnnotatedAstStep info){
 
         info.classNode.with {
-            innerClasses = declaredMethods
+            innerClasses = methods
                 .collect{ methodNode -> createWebServletClassNode(methodNode) }
                 .findAll{ it }
         }
 
-        println info.classNode.innerClasses
 
     }
 
@@ -62,15 +62,20 @@ class RestersonAst extends TypeAnnotatedAst {
      * @return ClassNode
      */
     ClassNode createWebServletClassNode(final MethodNode methodNode) {
-        AstBuilder.buildFromSpec {
-            ClassHelper.make(HttpServlet) {
-                method 'doGet', ACC_PUBLIC, Void.class, {
-                    parameters {
-                        parameter 'request': HttpServletRequest
-                        parameter 'response': HttpServletResponse
-                    }
-
+        def node = new AstBuilder().buildFromSpec {
+            innerClass 'Outer$Inner', ClassNode.ACC_PUBLIC, {
+                classNode 'Outer', ClassNode.ACC_PUBLIC, {
+                    classNode Object
+                    interfaces { classNode GroovyObject }
+                    mixins {}
                 }
+                    method 'doGet', ClassNode.ACC_PUBLIC, Void.class, {
+                        parameters {
+                            parameter 'request': HttpServletRequest
+                            parameter 'response': HttpServletResponse
+                        }
+
+                    }
                 annotations {
                     annotation(WebServlet) {
                         member 'value', { constant methodNode.name }
@@ -79,6 +84,9 @@ class RestersonAst extends TypeAnnotatedAst {
                 }
             }
         }?.find { it }
+
+        node
+
     }
 
 }
