@@ -32,11 +32,11 @@ import resterson.ast.Resterson
 class HelloResterson {
 
     void "/hi"() {
-        out << "Hi ${params.name.first()}"
+        out << "Hi ${params.name?.first()}"
     }
 
     void "/bye"() {
-        out << "Bye ${params.name.first()}"
+        out << "Bye ${params.name?.first()}"
     }
 
 }

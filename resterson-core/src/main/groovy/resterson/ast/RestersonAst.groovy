@@ -84,6 +84,26 @@ class RestersonAst extends TypeAnnotatedAst {
             }
         }?.find { it }
 
+        def doGetMethodNode = buildDoGetMethodFrom(methodNode)
+        def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
+
+        innerClassNode.addMethod(doGetMethodNode)
+        innerClassNode.addAnnotation(webServletAnnotation)
+
+        return innerClassNode
+
+    }
+
+    AnnotationNode buildWebServletAnnotationFrom(MethodNode methodNode) {
+
+        def annotation = new AnnotationNode(ClassHelper.make(WebServlet, false))
+        annotation.setMember('value', new ConstantExpression(methodNode.name))
+
+        return annotation
+
+    }
+
+    MethodNode buildDoGetMethodFrom(MethodNode methodNode) {
         MethodNode doGetMethodNode = new AstBuilder().buildFromSpec {
             method('doGet', ClassNode.ACC_PUBLIC, Void.TYPE) {
                 parameters {
@@ -119,13 +139,7 @@ class RestersonAst extends TypeAnnotatedAst {
             }
         }?.find { it }
 
-        innerClassNode.addMethod(doGetMethodNode)
-        def annotation = new AnnotationNode(ClassHelper.make(WebServlet, false))
-        annotation.setMember('value', new ConstantExpression(methodNode.name))
-
-        innerClassNode.addAnnotation(annotation)
-        innerClassNode
+        return doGetMethodNode
 
     }
-
 }
