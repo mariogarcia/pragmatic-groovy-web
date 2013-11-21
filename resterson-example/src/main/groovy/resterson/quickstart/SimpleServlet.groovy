@@ -16,27 +16,25 @@
  */
 package resterson.quickstart
 
-import resterson.ast.Resterson
+import java.io.IOException
+
+import javax.servlet.ServletException
+import javax.servlet.annotation.WebServlet
+
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 /**
- * This is a simple endpoint. Each enpoint has as its name the URL where is
- * going to be exposed.
- *
- * Within the method there will be some implicit variables such as
- *
- * - out : an instance of the response's java.io.PrintWriter
- * - params : a map containing parameters passed to the URL
- *
+ * This servlet is used as a visual reference when implementing
+ * the rest of the project
  */
-@Resterson
-class HelloResterson {
+@WebServlet(name="simpleServlet", urlPatterns=["/simple"])
+class SimpleServlet extends HttpServlet {
 
-    void "/hi"() {
-        out << "Hi ${params.name.first()}"
-    }
-
-    void "/bye"() {
-        out << "Bye ${params.name.first()}"
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.writer.write("not that simple")
     }
 
 }

@@ -25,8 +25,13 @@ import javax.servlet.http.HttpServletResponse
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.InnerClassNode
 import org.codehaus.groovy.ast.builder.AstBuilder
 
+import org.codehaus.groovy.ast.stmt.BlockStatement
+
+import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
@@ -46,11 +51,12 @@ class RestersonAst extends TypeAnnotatedAst {
     void visitClassNode(final TypeAnnotatedAstStep info){
 
         info.classNode.with {
-            innerClasses = methods
-                .collect{ methodNode -> createWebServletClassNode(methodNode) }
-                .findAll{ it }
+            methods.findAll { it.name.startsWith('/') }.eachWithIndex { methodNode, index ->
+                module.addClass(
+                    createWebServletClassNode(index, methodNode)
+                )
+            }
         }
-
 
     }
 
@@ -61,31 +67,64 @@ class RestersonAst extends TypeAnnotatedAst {
      * @param methodNode The node the servlet is going to be extracted from
      * @return ClassNode
      */
-    ClassNode createWebServletClassNode(final MethodNode methodNode) {
-        def node = new AstBuilder().buildFromSpec {
-            innerClass 'Outer$Inner', ClassNode.ACC_PUBLIC, {
-                classNode 'Outer', ClassNode.ACC_PUBLIC, {
+    ClassNode createWebServletClassNode(final Integer index, final MethodNode methodNode) {
+
+        String innerClassName = methodNode.declaringClass.name + '$' + "Inner$index"
+        InnerClassNode innerClassNode = new AstBuilder().buildFromSpec {
+            innerClass(innerClassName, ClassNode.ACC_PUBLIC) {
+                classNode(methodNode.declaringClass.name, ClassNode.ACC_PUBLIC) {
                     classNode Object
                     interfaces { classNode GroovyObject }
-                    mixins {}
+                    mixins { }
                 }
-                    method 'doGet', ClassNode.ACC_PUBLIC, Void.class, {
-                        parameters {
-                            parameter 'request': HttpServletRequest
-                            parameter 'response': HttpServletResponse
-                        }
+                classNode HttpServlet
+                interfaces { classNode GroovyObject }
+                mixins { }
 
+            }
+        }?.find { it }
+
+        MethodNode doGetMethodNode = new AstBuilder().buildFromSpec {
+            method('doGet', ClassNode.ACC_PUBLIC, Void.TYPE) {
+                parameters {
+                    parameter 'request' : HttpServletRequest
+                    parameter 'response' : HttpServletResponse
+                }
+                exceptions { }
+                block {
+                    expression {
+                        declaration {
+                            variable "out"
+                            token "="
+                            methodCall {
+                                variable "response"
+                                constant "getWriter"
+                                argumentList {}
+                            }
+                        }
                     }
-                annotations {
-                    annotation(WebServlet) {
-                        member 'value', { constant methodNode.name }
-                        member 'asyncSupported', { constant true }
+                    expression {
+                        declaration {
+                            variable "params"
+                            token "="
+                            methodCall {
+                                variable "request"
+                                constant "getParameterMap"
+                                argumentList {}
+                            }
+                        }
                     }
+                    expression.add methodNode.getCode()
                 }
             }
         }?.find { it }
 
-        node
+        innerClassNode.addMethod(doGetMethodNode)
+        def annotation = new AnnotationNode(ClassHelper.make(WebServlet, false))
+        annotation.setMember('value', new ConstantExpression(methodNode.name))
+
+        innerClassNode.addAnnotation(annotation)
+        innerClassNode
 
     }
 
