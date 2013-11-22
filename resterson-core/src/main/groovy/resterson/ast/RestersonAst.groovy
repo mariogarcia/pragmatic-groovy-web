@@ -94,6 +94,9 @@ class RestersonAst extends TypeAnnotatedAst {
 
     }
 
+    /**
+     * This method builds the @WebServlet annotation
+     */
     AnnotationNode buildWebServletAnnotationFrom(MethodNode methodNode) {
 
         def annotation = new AnnotationNode(ClassHelper.make(WebServlet, false))
@@ -103,6 +106,9 @@ class RestersonAst extends TypeAnnotatedAst {
 
     }
 
+    /**
+     * This method builds the servlet doGet method
+     */
     MethodNode buildDoGetMethodFrom(MethodNode methodNode) {
         MethodNode doGetMethodNode = new AstBuilder().buildFromSpec {
             method('doGet', ClassNode.ACC_PUBLIC, Void.TYPE) {
