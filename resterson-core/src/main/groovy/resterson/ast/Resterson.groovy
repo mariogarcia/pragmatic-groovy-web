@@ -24,7 +24,7 @@ import java.lang.annotation.RetentionPolicy
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
- * Every class annotated with this type will be transform
+ * Every class annotated with this type will be transformed
  * into a servlet
  *
  * @author Mario Garcia

@@ -54,6 +54,15 @@ abstract class TypeAnnotatedAst implements ASTTransformation {
 
     }
 
+    /**
+     * All classes inheriting from TypeAnnotatedAst should
+     * check nodes involved in the transformation should
+     * be either the annotated class or the annotation used
+     * to mark the transformation
+     *
+     * @param nodes Nodes involved in the transformation
+     * @return true if the validation passes, false otherwise
+     */
     def checkNodes(ASTNode[] nodes) {
 
         nodes[0] &&
@@ -63,6 +72,11 @@ abstract class TypeAnnotatedAst implements ASTTransformation {
 
     }
 
+    /**
+     * This method should be implemented by child classes
+     *
+     * @param info all data needed to do the transformation
+     */
     abstract void visitClassNode(TypeAnnotatedAstStep info)
 
 }

@@ -44,6 +44,9 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 @GroovyASTTransformation(phase = CompilePhase.INSTRUCTION_SELECTION)
 class RestersonAst extends TypeAnnotatedAst {
 
+    static final String SLASH = '/'
+    static final String DOLLAR = '$'
+
     RestersonAst() {
         super(Resterson)
     }
@@ -51,9 +54,9 @@ class RestersonAst extends TypeAnnotatedAst {
     void visitClassNode(final TypeAnnotatedAstStep info){
 
         info.classNode.with {
-            methods.findAll { it.name.startsWith('/') }.eachWithIndex { methodNode, index ->
+            methods.findAll { it.name.startsWith(SLASH) }.eachWithIndex { methodNode, index ->
                 module.addClass(
-                    createWebServletClassNode(index, methodNode)
+                    createWebServletClassNode(methodNode, index)
                 )
             }
         }
@@ -67,9 +70,34 @@ class RestersonAst extends TypeAnnotatedAst {
      * @param methodNode The node the servlet is going to be extracted from
      * @return ClassNode
      */
-    ClassNode createWebServletClassNode(final Integer index, final MethodNode methodNode) {
+    ClassNode createWebServletClassNode(final MethodNode methodNode, final Integer index) {
 
-        String innerClassName = methodNode.declaringClass.name + '$' + "Inner$index"
+        def innerClassNode = buildHttpServletInnerClass(methodNode, index)
+        def doGetMethodNode = buildDoGetMethodFrom(methodNode)
+        def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
+
+        innerClassNode.addMethod(doGetMethodNode)
+        innerClassNode.addAnnotation(webServletAnnotation)
+
+        return innerClassNode
+
+    }
+
+    /**
+     * This method builds an inner class with the information taken from a given
+     * method.
+     *
+     * The name of the inner class should be different from their siblings, that's
+     * why we're using an index
+     *
+     * @param methodNode The method we are taking information from
+     * @param index We use an index to make each inner class unique
+     * @return An inner class node extending HttpServlet
+     */
+    InnerClassNode buildHttpServletInnerClass(MethodNode methodNode,Integer index) {
+
+        String innerClassName = methodNode.declaringClass.name + DOLLAR + "Inner$index"
+
         InnerClassNode innerClassNode = new AstBuilder().buildFromSpec {
             innerClass(innerClassName, ClassNode.ACC_PUBLIC) {
                 classNode(methodNode.declaringClass.name, ClassNode.ACC_PUBLIC) {
@@ -80,15 +108,8 @@ class RestersonAst extends TypeAnnotatedAst {
                 classNode HttpServlet
                 interfaces { classNode GroovyObject }
                 mixins { }
-
             }
         }?.find { it }
-
-        def doGetMethodNode = buildDoGetMethodFrom(methodNode)
-        def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
-
-        innerClassNode.addMethod(doGetMethodNode)
-        innerClassNode.addAnnotation(webServletAnnotation)
 
         return innerClassNode
 
