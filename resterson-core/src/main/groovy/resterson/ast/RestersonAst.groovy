@@ -16,11 +16,8 @@
  */
 package resterson.ast
 
-import javax.servlet.annotation.WebServlet
-
 import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import javax.servlet.annotation.WebServlet
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -29,11 +26,11 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.InnerClassNode
 import org.codehaus.groovy.ast.builder.AstBuilder
 
-import org.codehaus.groovy.ast.stmt.BlockStatement
-
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
+
+import resterson.ast.HttpMethodBuilder as MB
 
 /**
  * This transfomation visits all classes annotated
@@ -73,7 +70,7 @@ class RestersonAst extends TypeAnnotatedAst {
     ClassNode createWebServletClassNode(final MethodNode methodNode, final Integer index) {
 
         def innerClassNode = buildHttpServletInnerClass(methodNode, index)
-        def doGetMethodNode = buildDoGetMethodFrom(methodNode)
+        def doGetMethodNode = MB.buildDoGetMethodFrom(methodNode)
         def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
 
         innerClassNode.addMethod(doGetMethodNode)
@@ -127,46 +124,5 @@ class RestersonAst extends TypeAnnotatedAst {
 
     }
 
-    /**
-     * This method builds the servlet doGet method
-     */
-    MethodNode buildDoGetMethodFrom(MethodNode methodNode) {
-        MethodNode doGetMethodNode = new AstBuilder().buildFromSpec {
-            method('doGet', ClassNode.ACC_PUBLIC, Void.TYPE) {
-                parameters {
-                    parameter 'request' : HttpServletRequest
-                    parameter 'response' : HttpServletResponse
-                }
-                exceptions { }
-                block {
-                    expression {
-                        declaration {
-                            variable "out"
-                            token "="
-                            methodCall {
-                                variable "response"
-                                constant "getWriter"
-                                argumentList {}
-                            }
-                        }
-                    }
-                    expression {
-                        declaration {
-                            variable "params"
-                            token "="
-                            methodCall {
-                                variable "request"
-                                constant "getParameterMap"
-                                argumentList {}
-                            }
-                        }
-                    }
-                    expression.add methodNode.getCode()
-                }
-            }
-        }?.find { it }
-
-        return doGetMethodNode
-
-    }
 }
+
