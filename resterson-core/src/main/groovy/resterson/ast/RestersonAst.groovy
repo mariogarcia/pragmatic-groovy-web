@@ -30,8 +30,6 @@ import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
-import resterson.ast.HttpMethodBuilder as MB
-
 /**
  * This transfomation visits all classes annotated
  * with @Resterson and transform them into servlets
@@ -43,6 +41,9 @@ class RestersonAst extends TypeAnnotatedAst {
 
     static final String SLASH = '/'
     static final String DOLLAR = '$'
+    static final List<String> HTTP_METHODS = ['GET','POST','UPDATE','DELETE','PUT','OPTIONS']
+    static final String URL_MAPPINGS_REGEX = "(${HTTP_METHODS.join('|')}){0,1}?(\\/.{0,})"
+    static final String RESTERSON_PACKAGE = 'resterson.ast'
 
     RestersonAst() {
         super(Resterson)
@@ -50,11 +51,13 @@ class RestersonAst extends TypeAnnotatedAst {
 
     void visitClassNode(final TypeAnnotatedAstStep info){
 
+        def possibleMethods = { methodNode ->
+            return methodNode.name.matches(URL_MAPPINGS_REGEX)
+        }
+
         info.classNode.with {
-            methods.findAll { it.name.startsWith(SLASH) }.eachWithIndex { methodNode, index ->
-                module.addClass(
-                    createWebServletClassNode(methodNode, index)
-                )
+            methods.findAll(possibleMethods).eachWithIndex { methodNode, index ->
+                module.addClass(createWebServletClassNode(methodNode, index))
             }
         }
 
@@ -65,15 +68,16 @@ class RestersonAst extends TypeAnnotatedAst {
      * the annotated class.
      *
      * @param methodNode The node the servlet is going to be extracted from
+     * @param index Used to make each inner class unique
      * @return ClassNode
      */
     ClassNode createWebServletClassNode(final MethodNode methodNode, final Integer index) {
 
         def innerClassNode = buildHttpServletInnerClass(methodNode, index)
-        def doGetMethodNode = MB.buildDoGetMethodFrom(methodNode)
+        def functionalMethodNode = new HttpServletMethodBuilder().buildDoMethodFrom(methodNode)
         def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
 
-        innerClassNode.addMethod(doGetMethodNode)
+        innerClassNode.addMethod(functionalMethodNode)
         innerClassNode.addAnnotation(webServletAnnotation)
 
         return innerClassNode
@@ -87,17 +91,23 @@ class RestersonAst extends TypeAnnotatedAst {
      * The name of the inner class should be different from their siblings, that's
      * why we're using an index
      *
-     * @param methodNode The method we are taking information from
-     * @param index We use an index to make each inner class unique
+     * @param methodNode MethodNode instance used to build an HttpServlet instance
+     * @param index Used to make each inner class unique
      * @return An inner class node extending HttpServlet
      */
-    InnerClassNode buildHttpServletInnerClass(MethodNode methodNode,Integer index) {
+    InnerClassNode buildHttpServletInnerClass(MethodNode methodNode, Integer index) {
 
-        String innerClassName = methodNode.declaringClass.name + DOLLAR + "Inner$index"
+        def declaringClass = methodNode.declaringClass
+        def declaringClassName = declaringClass.name
+        def innerClassName = declaringClass.name + DOLLAR + "Inner$index"
+        def declaringClassAnnotations =
+            declaringClass.annotations.findAll{ annotationNode ->
+                annotationNode.classNode.packageName != RESTERSON_PACKAGE
+            }
 
         InnerClassNode innerClassNode = new AstBuilder().buildFromSpec {
             innerClass(innerClassName, ClassNode.ACC_PUBLIC) {
-                classNode(methodNode.declaringClass.name, ClassNode.ACC_PUBLIC) {
+                classNode(declaringClassName, ClassNode.ACC_PUBLIC) {
                     classNode Object
                     interfaces { classNode GroovyObject }
                     mixins { }
@@ -108,6 +118,8 @@ class RestersonAst extends TypeAnnotatedAst {
             }
         }?.find { it }
 
+        innerClassNode.addAnnotations(declaringClassAnnotations)
+
         return innerClassNode
 
     }
@@ -117,8 +129,11 @@ class RestersonAst extends TypeAnnotatedAst {
      */
     AnnotationNode buildWebServletAnnotationFrom(MethodNode methodNode) {
 
+        def regex = ~URL_MAPPINGS_REGEX
+        def urlMapping = regex.matcher(methodNode.name)[0].last()
         def annotation = new AnnotationNode(ClassHelper.make(WebServlet, false))
-        annotation.setMember('value', new ConstantExpression(methodNode.name))
+
+        annotation.setMember('value', new ConstantExpression(urlMapping))
 
         return annotation
 

@@ -17,6 +17,7 @@
 package resterson.quickstart
 
 import resterson.ast.Resterson
+import groovy.util.logging.Log
 
 /**
  * This is a simple endpoint. Each enpoint has as its name the URL where is
@@ -28,14 +29,17 @@ import resterson.ast.Resterson
  * - params : a map containing parameters passed to the URL
  *
  */
+//@Log
 @Resterson
-class HelloResterson {
+class GreetingsController {
 
-    void "/hi"() {
-        out << "Hi ${params.name?.first()}"
+    void "GET/hi"() {
+        def greetings = "Hi ${params.name?.first()}"
+        //log.debug(greetings)
+        out << greetings
     }
 
-    void "/bye"() {
+    void "POST/bye"() {
         out << "Bye ${params.name?.first()}"
     }
 

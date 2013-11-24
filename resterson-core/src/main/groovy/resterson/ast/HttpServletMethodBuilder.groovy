@@ -10,26 +10,36 @@ import org.codehaus.groovy.ast.builder.AstBuilder
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-class HttpMethodBuilder {
+import java.util.regex.Pattern
+
+/**
+ * This class builds a given servlet method depending on the HTTP method available
+ */
+class HttpServletMethodBuilder {
 
     /**
-     * This method builds the servlet doGet method
+     * This method builds the servlet method
      */
-    static MethodNode buildDoGetMethodFrom(final MethodNode methodNode) {
+    MethodNode buildDoMethodFrom(final MethodNode methodNode) {
+
+        Pattern regex = (~RestersonAst.URL_MAPPINGS_REGEX)
+        String methodName = regex.matcher(methodNode.name)[0][1]
+        String servletMethod = "do${methodName.toLowerCase().capitalize()}".toString()
+
         MethodNode doGetMethodNode = new AstBuilder().buildFromSpec {
-            method('doGet', ClassNode.ACC_PUBLIC, Void.TYPE) {
+            method(servletMethod, ClassNode.ACC_PUBLIC, Void.TYPE) {
                 parameters {
-                    parameter 'request' : HttpServletRequest
-                    parameter 'response' : HttpServletResponse
+                    parameter 'request': HttpServletRequest
+                    parameter 'response': HttpServletResponse
                 }
                 exceptions { }
                 block {
                     expression {
                         declaration {
                             variable "out"
-                            token "="
+                            token '='
                             methodCall {
-                                variable "response"
+                                variable 'response'
                                 constant "getWriter"
                                 argumentList {}
                             }
@@ -38,9 +48,9 @@ class HttpMethodBuilder {
                     expression {
                         declaration {
                             variable "params"
-                            token "="
+                            token '='
                             methodCall {
-                                variable "request"
+                                variable 'request'
                                 constant "getParameterMap"
                                 argumentList {}
                             }
