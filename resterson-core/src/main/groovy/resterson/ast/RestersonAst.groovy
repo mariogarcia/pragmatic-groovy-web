@@ -76,9 +76,11 @@ class RestersonAst extends TypeAnnotatedAst {
         def innerClassNode = buildHttpServletInnerClass(methodNode, index)
         def functionalMethodNode = new HttpServletMethodBuilder().buildDoMethodFrom(methodNode)
         def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
+        def inheritedAnnotations = buildInheritedAnnotationsFrom(methodNode)
 
         innerClassNode.addMethod(functionalMethodNode)
         innerClassNode.addAnnotation(webServletAnnotation)
+        innerClassNode.addAnnotations(inheritedAnnotations)
 
         return innerClassNode
 
@@ -100,10 +102,6 @@ class RestersonAst extends TypeAnnotatedAst {
         def declaringClass = methodNode.declaringClass
         def declaringClassName = declaringClass.name
         def innerClassName = declaringClass.name + DOLLAR + "Inner$index"
-        def declaringClassAnnotations =
-            declaringClass.annotations.findAll{ annotationNode ->
-                annotationNode.classNode.packageName != RESTERSON_PACKAGE
-            }
 
         InnerClassNode innerClassNode = new AstBuilder().buildFromSpec {
             innerClass(innerClassName, ClassNode.ACC_PUBLIC) {
@@ -117,8 +115,6 @@ class RestersonAst extends TypeAnnotatedAst {
                 mixins { }
             }
         }?.find { it }
-
-        innerClassNode.addAnnotations(declaringClassAnnotations)
 
         return innerClassNode
 
@@ -136,6 +132,14 @@ class RestersonAst extends TypeAnnotatedAst {
         annotation.setMember('value', new ConstantExpression(urlMapping))
 
         return annotation
+
+    }
+
+    List<AnnotationNode> buildInheritedAnnotationsFrom(MethodNode methodNode) {
+
+        return methodNode.declaringClass.annotations.findAll{ annotationNode ->
+            annotationNode.classNode.packageName != RESTERSON_PACKAGE
+        }
 
     }
 
