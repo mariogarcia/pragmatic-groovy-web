@@ -129,6 +129,20 @@ class RestersonAst extends TypeAnnotatedAst {
                             }
                         }
                     }
+                    expression {
+                        declaration {
+                            variable "asynContext"
+                            token "="
+                            methodCall {
+                                variable 'request'
+                                constant 'startsAsync'
+                                argumentList {
+                                    variable "request"
+                                    variable "response"
+                                }
+                            }
+                        }
+                    }
                     expression.add methodNode.getCode()
                 }
             }
