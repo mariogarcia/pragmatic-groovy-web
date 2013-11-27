@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
+import org.codehaus.groovy.classgen.VariableScopeVisitor
 
 /**
  * This transfomation visits all classes annotated
@@ -61,7 +62,9 @@ class RestersonAst extends TypeAnnotatedAst {
 
         info.classNode.with {
             methods.findAll(possibleMethods).eachWithIndex { methodNode, index ->
-                module.addClass(createWebServletClassNode(methodNode, index))
+                def innerClass = createWebServletClassNode(methodNode, index)
+                new VariableScopeVisitor(info.sourceUnit).visitClass(innerClass)
+                module.addClass(innerClass)
             }
         }
 
@@ -86,6 +89,8 @@ class RestersonAst extends TypeAnnotatedAst {
         innerClassNode.addAnnotation(webServletAnnotation)
         innerClassNode.addAnnotations(inheritedAnnotations)
 
+
+
         return innerClassNode
 
     }
@@ -109,23 +114,35 @@ class RestersonAst extends TypeAnnotatedAst {
                 block {
                     expression {
                         declaration {
-                            variable "out"
+                            variable 'executionContent'
                             token '='
-                            methodCall {
-                                variable 'response'
-                                constant "getWriter"
-                                argumentList {}
-                            }
-                        }
-                    }
-                    expression {
-                        declaration {
-                            variable "params"
-                            token '='
-                            methodCall {
-                                variable 'request'
-                                constant "getParameterMap"
-                                argumentList {}
+                            closure {
+                                parameters {}
+                                block {
+                                    expression {
+                                        declaration {
+                                            variable "out"
+                                            token '='
+                                            methodCall {
+                                                variable 'response'
+                                                constant "getWriter"
+                                                argumentList {}
+                                            }
+                                        }
+                                    }
+                                    expression {
+                                        declaration {
+                                            variable "params"
+                                            token '='
+                                            methodCall {
+                                                variable 'request'
+                                                constant "getParameterMap"
+                                                argumentList {}
+                                            }
+                                        }
+                                    }
+                                    expression.add methodNode.getCode()
+                                }
                             }
                         }
                     }
@@ -135,7 +152,7 @@ class RestersonAst extends TypeAnnotatedAst {
                             token "="
                             methodCall {
                                 variable 'request'
-                                constant 'startsAsync'
+                                constant 'startAsync'
                                 argumentList {
                                     variable "request"
                                     variable "response"
@@ -143,7 +160,20 @@ class RestersonAst extends TypeAnnotatedAst {
                             }
                         }
                     }
-                    expression.add methodNode.getCode()
+                    expression {
+                        methodCall {
+                            variable 'asyncContext'
+                            constant 'start'
+                            argumentList {
+                                constructorCall(RestersonWorker) {
+                                    argumentList {
+                                        variable 'context'
+                                        variable 'executionContent'
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }?.find { it }
