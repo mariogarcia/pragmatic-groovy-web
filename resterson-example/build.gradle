@@ -45,7 +45,7 @@ dependencies {
     }
 }
 
-tomcatRun {
+tomcatRunWar {
 
     httpProtocol = "org.apache.coyote.http11.Http11NioProtocol"
 

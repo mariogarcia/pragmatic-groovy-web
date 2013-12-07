@@ -34,6 +34,7 @@ class RestersonWorker implements Runnable {
 
     void run() {
         context.with(closure)
+        context.complete()
     }
 
 }

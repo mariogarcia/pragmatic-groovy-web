@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse
  * This servlet is used as a visual reference when implementing
  * the rest of the project
  */
-@WebServlet(name="simpleServlet", urlPatterns=["/simple"])
+@WebServlet(name="simpleServlet", asyncSupported=true, urlPatterns=["/simple"])
 class SimpleServlet extends HttpServlet {
 
     @Override

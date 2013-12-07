@@ -148,7 +148,7 @@ class RestersonAst extends TypeAnnotatedAst {
                     }
                     expression {
                         declaration {
-                            variable "asynContext"
+                            variable "asyncContext"
                             token "="
                             methodCall {
                                 variable 'request'
@@ -167,7 +167,7 @@ class RestersonAst extends TypeAnnotatedAst {
                             argumentList {
                                 constructorCall(RestersonWorker) {
                                     argumentList {
-                                        variable 'context'
+                                        variable 'asyncContext'
                                         variable 'executionContent'
                                     }
                                 }
@@ -226,6 +226,7 @@ class RestersonAst extends TypeAnnotatedAst {
         def annotation = new AnnotationNode(ClassHelper.make(WebServlet, false))
 
         annotation.setMember('value', new ConstantExpression(urlMapping))
+        annotation.setMember('asyncSupported', new ConstantExpression(true))
 
         return annotation
 

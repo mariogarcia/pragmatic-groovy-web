@@ -25,6 +25,8 @@ import groovy.util.logging.Log
  *
  * Within the method there will be some implicit variables such as
  *
+ * - request: HttpServletRequest
+ * - response: HttpServletResponse
  * - out : an instance of the response's java.io.PrintWriter
  * - params : a map containing parameters passed to the URL
  *
@@ -34,13 +36,11 @@ import groovy.util.logging.Log
 class GreetingsController {
 
     void "GET/hi"() {
-        def greetings = "Hi ${params.name?.first()}"
-        //log.debug(greetings)
-        out << greetings
+        response.writer << "Hi ${params.name?.first()}"
     }
 
-    void "POST/bye"() {
-        out << "Bye ${params.name?.first()}"
+    void "GET/bye"() {
+        out << "Bye ${request.parameterMap.name?.first()}"
     }
 
 }
