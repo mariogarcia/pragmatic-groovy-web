@@ -30,7 +30,9 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.InnerClassNode
 import org.codehaus.groovy.ast.builder.AstBuilder
 
-import org.codehaus.groovy.ast.expr.ConstantExpression
+import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.*
+import org.codehaus.groovy.syntax.*
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.codehaus.groovy.classgen.VariableScopeVisitor
@@ -95,6 +97,8 @@ class RestersonAst extends TypeAnnotatedAst {
 
     }
 
+
+
     /**
      * This method builds the servlet method
      */
@@ -119,17 +123,7 @@ class RestersonAst extends TypeAnnotatedAst {
                             closure {
                                 parameters {}
                                 block {
-                                    expression {
-                                        declaration {
-                                            variable "out"
-                                            token '='
-                                            methodCall {
-                                                variable 'response'
-                                                constant "getWriter"
-                                                argumentList {}
-                                            }
-                                        }
-                                    }
+                                    owner.expression.add(buildOutExpressionStatement())
                                     expression {
                                         declaration {
                                             variable "params"
@@ -179,6 +173,30 @@ class RestersonAst extends TypeAnnotatedAst {
         }?.find { it }
 
         return doGetMethodNode
+
+    }
+
+    /**
+     * This method builds a local variable 'out' within the scope of
+     * the controller's method.
+     *
+     * @return the declaration nodes
+     */
+    ExpressionStatement buildOutExpressionStatement() {
+
+        return new AstBuilder().buildFromSpec {
+                expression {
+                    declaration {
+                        variable "out"
+                        token '='
+                        methodCall {
+                            variable 'response'
+                            constant "getWriter"
+                            argumentList {}
+                        }
+                    }
+                }
+        }?.find { it }
 
     }
 
