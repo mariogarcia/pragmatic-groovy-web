@@ -39,7 +39,7 @@ class GreetingsController {
         response.writer << "Hi ${params.name?.first()}"
     }
 
-    void "GET/bye"() {
+    void "/bye"() {
         out << "Bye ${request.parameterMap.name?.first()}"
     }
 

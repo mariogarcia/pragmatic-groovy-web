@@ -48,7 +48,7 @@ class RestersonAst extends TypeAnnotatedAst {
 
     static final String SLASH = '/'
     static final String DOLLAR = '$'
-    static final List<String> HTTP_METHODS = ['GET','POST','UPDATE','DELETE','PUT','OPTIONS']
+    static final List<String> HTTP_METHODS = ['GET','POST','HEAD','DELETE','PUT','OPTIONS']
     static final String URL_MAPPINGS_REGEX = "(${HTTP_METHODS.join('|')}){0,1}?(\\/.{0,})"
     static final String RESTERSON_PACKAGE = 'resterson.ast'
 
@@ -63,11 +63,15 @@ class RestersonAst extends TypeAnnotatedAst {
         }
 
         info.classNode.with {
-            methods.findAll(possibleMethods).eachWithIndex { methodNode, index ->
-                def innerClass = createWebServletClassNode(methodNode, index)
-                new VariableScopeVisitor(info.sourceUnit).visitClass(innerClass)
-                module.addClass(innerClass)
-            }
+            methods.
+                findAll(possibleMethods).
+                eachWithIndex { methodNode, index ->
+
+                    def innerClass = createWebServletClassNode(methodNode, index)
+                    new VariableScopeVisitor(info.sourceUnit).visitClass(innerClass)
+                    module.addClass(innerClass)
+
+                }
         }
 
     }
@@ -83,15 +87,12 @@ class RestersonAst extends TypeAnnotatedAst {
     ClassNode createWebServletClassNode(final MethodNode methodNode, final Integer index) {
 
         def innerClassNode = buildHttpServletInnerClass(methodNode, index)
-        def functionalMethodNode = buildDoMethodFrom(methodNode)
-        def webServletAnnotation = buildWebServletAnnotationFrom(methodNode)
-        def inheritedAnnotations = buildInheritedAnnotationsFrom(methodNode)
 
-        innerClassNode.addMethod(functionalMethodNode)
-        innerClassNode.addAnnotation(webServletAnnotation)
-        innerClassNode.addAnnotations(inheritedAnnotations)
-
-
+        innerClassNode.with {
+            addMethod(buildDoMethodFrom(methodNode))
+            addAnnotation(buildWebServletAnnotationFrom(methodNode))
+            addAnnotations(buildInheritedAnnotationsFrom(methodNode))
+        }
 
         return innerClassNode
 
@@ -104,8 +105,8 @@ class RestersonAst extends TypeAnnotatedAst {
      */
     MethodNode buildDoMethodFrom(final MethodNode methodNode) {
 
-        Pattern regex = (~RestersonAst.URL_MAPPINGS_REGEX)
-        String methodName = regex.matcher(methodNode.name)[0][1]
+        Pattern regex = ~RestersonAst.URL_MAPPINGS_REGEX
+        String methodName = regex.matcher(methodNode.name)[0][1] ?: 'GET'
         String servletMethod = "do${methodName.toLowerCase().capitalize()}".toString()
 
         MethodNode doGetMethodNode = new AstBuilder().buildFromSpec {
@@ -123,44 +124,19 @@ class RestersonAst extends TypeAnnotatedAst {
                             closure {
                                 parameters {}
                                 block {
-                                    owner.expression.add(buildOutExpressionStatement())
-                                    owner.expression.add(buildParamsExpressionStatement())
-                                    expression.add methodNode.getCode()
+                                    /* Adding implicit variables */
+                                    expression.add(buildOutExpressionStatement())
+                                    expression.add(buildParamsExpressionStatement())
+                                    expression.add(methodNode.getCode())
                                 }
                             }
                         }
                     }
-                    expression {
-                        declaration {
-                            variable "asyncContext"
-                            token "="
-                            methodCall {
-                                variable 'request'
-                                constant 'startAsync'
-                                argumentList {
-                                    variable "request"
-                                    variable "response"
-                                }
-                            }
-                        }
-                    }
-                    expression {
-                        methodCall {
-                            variable 'asyncContext'
-                            constant 'start'
-                            argumentList {
-                                constructorCall(RestersonWorker) {
-                                    argumentList {
-                                        variable 'asyncContext'
-                                        variable 'executionContent'
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    expression.add(buildAsyncContextVariable())
+                    expression.add(buildAsyncContextStart())
                 }
             }
-        }?.find { it }
+        }.first()
 
         return doGetMethodNode
 
@@ -175,21 +151,31 @@ class RestersonAst extends TypeAnnotatedAst {
     ExpressionStatement buildOutExpressionStatement() {
 
         return new AstBuilder().buildFromSpec {
-                expression {
-                    declaration {
-                        variable "out"
-                        token '='
+            expression {
+                declaration {
+                    variable "out"
+                    token '='
+                    methodCall {
                         methodCall {
-                            variable 'response'
-                            constant "getWriter"
-                            argumentList {}
+                           variable 'delegate'
+                           constant 'getResponse'
+                           argumentList {}
                         }
+                        constant "getWriter"
+                        argumentList {}
                     }
                 }
-        }?.find { it }
+            }
+        }.first()
 
     }
 
+    /**
+     * This method builds a local variable 'params' within the scope of
+     * the controller's method.
+     *
+     * @return the declaration nodes
+     */
     ExpressionStatement buildParamsExpressionStatement() {
 
         return new AstBuilder().buildFromSpec {
@@ -198,13 +184,70 @@ class RestersonAst extends TypeAnnotatedAst {
                     variable "params"
                     token '='
                     methodCall {
-                        variable 'request'
+                        methodCall {
+                            variable 'delegate'
+                            constant 'getRequest'
+                            argumentList {}
+                        }
                         constant "getParameterMap"
                         argumentList {}
                     }
                 }
             }
-        }?.find { it }
+        }.first()
+
+    }
+
+    /**
+     * This method declares the async context
+     *
+     * @return the declaration nodes
+     */
+    ExpressionStatement buildAsyncContextVariable() {
+
+        return new AstBuilder().buildFromSpec {
+            expression {
+                declaration {
+                    variable "asyncContext"
+                    token "="
+                    methodCall {
+                        variable 'request'
+                        constant 'startAsync'
+                        argumentList {
+                            variable "request"
+                            variable "response"
+                        }
+                    }
+                }
+            }
+        }.first()
+
+    }
+
+    /**
+     * This method builds the code block where the async context
+     * is initialized
+     *
+     * @return the block code
+     */
+    ExpressionStatement buildAsyncContextStart() {
+
+        return new AstBuilder().buildFromSpec {
+            expression {
+                methodCall {
+                    variable 'asyncContext'
+                    constant 'start'
+                    argumentList {
+                        constructorCall(RestersonWorker) {
+                            argumentList {
+                                variable 'asyncContext'
+                                variable 'executionContent'
+                            }
+                        }
+                    }
+                }
+            }
+        }.first()
 
     }
 
@@ -236,7 +279,7 @@ class RestersonAst extends TypeAnnotatedAst {
                 interfaces { classNode GroovyObject }
                 mixins { }
             }
-        }?.find { it }
+        }.first()
 
         return innerClassNode
 
