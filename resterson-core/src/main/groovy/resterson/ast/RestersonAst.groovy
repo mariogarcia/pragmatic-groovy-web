@@ -124,17 +124,7 @@ class RestersonAst extends TypeAnnotatedAst {
                                 parameters {}
                                 block {
                                     owner.expression.add(buildOutExpressionStatement())
-                                    expression {
-                                        declaration {
-                                            variable "params"
-                                            token '='
-                                            methodCall {
-                                                variable 'request'
-                                                constant "getParameterMap"
-                                                argumentList {}
-                                            }
-                                        }
-                                    }
+                                    owner.expression.add(buildParamsExpressionStatement())
                                     expression.add methodNode.getCode()
                                 }
                             }
@@ -196,6 +186,24 @@ class RestersonAst extends TypeAnnotatedAst {
                         }
                     }
                 }
+        }?.find { it }
+
+    }
+
+    ExpressionStatement buildParamsExpressionStatement() {
+
+        return new AstBuilder().buildFromSpec {
+            expression {
+                declaration {
+                    variable "params"
+                    token '='
+                    methodCall {
+                        variable 'request'
+                        constant "getParameterMap"
+                        argumentList {}
+                    }
+                }
+            }
         }?.find { it }
 
     }
