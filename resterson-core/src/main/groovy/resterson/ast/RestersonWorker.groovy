@@ -25,8 +25,8 @@ import javax.servlet.AsyncContext
  */
 class RestersonWorker implements Runnable {
 
-    def context
-    def closure
+    AsyncContext context
+    Closure closure
 
     RestersonWorker(AsyncContext context, Closure closure) {
         this.context = context
