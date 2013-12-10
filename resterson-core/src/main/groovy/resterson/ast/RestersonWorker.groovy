@@ -16,6 +16,7 @@
  */
 package resterson.ast
 
+import javax.servlet.AsyncContext
 /**
  * This class is a worker for processing asynchronous requests. This type
  * should be used with asynchronous servlets 3.0+
@@ -27,7 +28,7 @@ class RestersonWorker implements Runnable {
     def context
     def closure
 
-    RestersonWorker(context, closure) {
+    RestersonWorker(AsyncContext context, Closure closure) {
         this.context = context
         this.closure = closure
     }

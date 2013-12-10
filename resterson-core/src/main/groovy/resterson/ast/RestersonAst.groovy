@@ -132,6 +132,7 @@ class RestersonAst extends TypeAnnotatedAst {
                             }
                         }
                     }
+                    /* Initialize async context */
                     expression.add(buildAsyncContextVariable())
                     expression.add(buildAsyncContextStart())
                 }
