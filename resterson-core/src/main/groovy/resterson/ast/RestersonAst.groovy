@@ -151,23 +151,21 @@ class RestersonAst extends TypeAnnotatedAst {
      */
     ExpressionStatement buildOutExpressionStatement() {
 
-        return new AstBuilder().buildFromSpec {
-            expression {
-                declaration {
-                    variable "out"
-                    token '='
-                    methodCall {
-                        methodCall {
-                           variable 'delegate'
-                           constant 'getResponse'
-                           argumentList {}
-                        }
-                        constant "getWriter"
-                        argumentList {}
-                    }
-                }
-            }
-        }.first()
+        return new ExpressionStatement(
+            new DeclarationExpression(
+                new VariableExpression("out"),
+                new Token(Types.EQUALS, "=", -1, -1),
+                new MethodCallExpression(
+                    new MethodCallExpression(
+                        new VariableExpression('delegate'),
+                        new ConstantExpression('getResponse'),
+                        new ArgumentListExpression()
+                    ),
+                    new ConstantExpression('getWriter'),
+                    new ArgumentListExpression()
+                )
+            )
+        )
 
     }
 
